@@ -15,6 +15,13 @@
 <meta name="apple-mobile-web-app-title" content="Stardust">
 <script>window.SD_PWA="<link rel=\"manifest\" href=\"manifest.webmanifest\">\n<link rel=\"icon\" href=\"icon-192.png\">\n<link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\">\n<meta name=\"apple-mobile-web-app-capable\" content=\"yes\">\n<meta name=\"mobile-web-app-capable\" content=\"yes\">\n<meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black-translucent\">\n<meta name=\"apple-mobile-web-app-title\" content=\"Stardust\">\n";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Barlow:wght@400;600&display=swap">
 <script>window.SD_FIREBASE={"apiKey": "AIzaSyCKpVZk22cbXq2Q1XbzTWB313Sx27tMIbQ", "authDomain": "stardust-drifters.firebaseapp.com", "projectId": "stardust-drifters", "storageBucket": "stardust-drifters.firebasestorage.app", "messagingSenderId": "1020217118319", "appId": "1:1020217118319:web:11d0bad344c1614406879a"};</script>
 <style>
@@ -119,7 +126,7 @@ if(cfg&&!window.SDNET){
     const app=initializeApp(cfg),auth=A.getAuth(app),db=F.getFirestore(app);
     const clean=o=>JSON.parse(JSON.stringify(o||{}));
     N.signInGoogle=async()=>{const p=new A.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
-      try{await A.signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')await A.signInWithRedirect(auth,p);else throw e}};
+      try{await A.signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'){try{sessionStorage.setItem('sd_redir','1')}catch(_){}await A.signInWithRedirect(auth,p)}else throw e}};
     N.signInEmail=(e,p)=>A.signInWithEmailAndPassword(auth,lc(e),p);
     N.signUpEmail=async(e,p)=>{const c=await A.createUserWithEmailAndPassword(auth,lc(e),p);await A.sendEmailVerification(c.user)};
     N.resendVerify=async()=>{if(auth.currentUser)await A.sendEmailVerification(auth.currentUser)};
@@ -149,11 +156,14 @@ if(cfg&&!window.SDNET){
       if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){N.state='verify';emit();return}
       N.state='loading';emit();
       // the owner can list the crew list; everyone else can only check their own entry
-      let admin=false;try{await F.getDocs(F.query(F.collection(db,'allow'),F.limit(1)));admin=true}catch(_){}
-      let ok=admin;if(!ok){try{ok=(await F.getDoc(F.doc(db,'allow',N.user.email))).exists()}catch(_){ok=false}}
+      // both checks at once instead of one after the other
+      const [admin,mine]=await Promise.all([F.getDocs(F.query(F.collection(db,'allow'),F.limit(1))).then(()=>true,()=>false),F.getDoc(F.doc(db,'allow',N.user.email)).then(d=>d.exists(),()=>false)]);
+      const ok=admin||mine;
       N.isAdmin=admin;N.state=ok?'ready':'denied';emit()}
-    try{await A.getRedirectResult(auth)}catch(e){N.msg=N.nice(e)}
     A.onAuthStateChanged(auth,u=>{evaluate(u).catch(e=>{N.state='error';N.msg=N.nice(e);emit()})});
+    // only finish a Google redirect sign-in when one was started (checking on every visit loads an extra sign-in frame and slows start-up)
+    let redir=false;try{redir=sessionStorage.getItem('sd_redir')==='1';sessionStorage.removeItem('sd_redir')}catch(_){}
+    if(redir)A.getRedirectResult(auth).catch(e=>{N.msg=N.nice(e);emit()});
   }catch(e){N.state='error';N.msg='Could not reach the crew server. Check your connection and reload.';emit()}
 }})();
 
@@ -167,8 +177,9 @@ const msg=(id,t,ok)=>{const m=$(id);m.textContent=t||'';m.classList.toggle('ok',
 const nice=e=>window.SDNET&&SDNET.nice?SDNET.nice(e):String(e&&e.message||e);
 const busy=async(btn,fn,mid)=>{if(btn.disabled)return;btn.disabled=true;if(mid)msg(mid,'');try{await fn()}catch(e){if(e&&e.code==='auth/popup-closed-by-user')return;if(mid)msg(mid,nice(e))}finally{btn.disabled=false}};
 const creds=()=>[$('iEmail').value.trim(),$('iPass').value];
-const CK='sd_game_cache';
-let launched=false,started=false;
+const CK='sd_game_cache',SK='sd_signed';
+let launched=false,started=false,lastMeta=null;
+const flag=v=>{try{v?localStorage.setItem(SK,'1'):localStorage.removeItem(SK)}catch(_){}};
 function cached(){try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}}
 function remember(v,txt){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(_){try{localStorage.removeItem(CK)}catch(__){}}}
 async function getGame(meta){const c=cached();if(c&&c.v===meta.v&&c.txt&&c.txt.length===meta.size)return c.txt;
@@ -180,9 +191,14 @@ function launch(txt){if(launched)return;launched=true;
   let html=txt.replace(/<head>/i,'<head>\n'+head);
   html=html.lastIndexOf('</body>')>0?html.slice(0,html.lastIndexOf('</body>'))+net+'\n'+html.slice(html.lastIndexOf('</body>')):html+net;
   document.open();document.write(html);document.close()}
-async function ready(){if(started)return;started=true;
+// after the game has started from this device's copy: once signed in, fetch a newer version for next time and tell the game
+function bgCheck(c){let n=0;const iv=setInterval(async()=>{const N=window.SDNET;if(++n>240){clearInterval(iv);return}
+  if(!N||N.state!=='ready')return;clearInterval(iv);
+  try{const meta=await N.gameInfo();if(!meta||meta.v===c.v)return;const txt=await N.fetchGame(meta);remember(meta.v,txt);
+    dispatchEvent(new CustomEvent('sdupdate',{detail:{ver:meta.ver||''}}))}catch(_){}},500)}
+async function ready(){if(started)return;started=true;flag(1);
   try{show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Checking the game version…';
-    const meta=await SDNET.gameInfo();
+    const meta=await SDNET.gameInfo();lastMeta=meta;
     if(SDNET.isAdmin){show('cOwner');$('ownInfo').textContent=meta?'Live version '+(meta.ver?meta.ver+', uploaded ':'uploaded ')+new Date(meta.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(meta.size/1024)+' KB).':'No game uploaded yet. Tap Upload new version and pick the StardustDrifters.html file Claude sent you.';$('bPlay').disabled=!meta;return}
     if(!meta){show('cWait');return}
     launch(await getGame(meta))}
@@ -195,6 +211,10 @@ function render(){const N=window.SDNET;if(!N||launched)return;
   else if(N.state==='denied'){show('cDenied');$('denWho').textContent=N.user.email}
   else if(N.state==='error'){show('cErr');$('errMsg').textContent=N.msg||'Something went wrong.'}
   else if(N.state==='ready')ready()}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+// returning players start instantly from the copy saved on this device; the game's own sign-in screen takes over from there
+{const c=cached();let signed=false;try{signed=localStorage.getItem(SK)==='1'}catch(_){}
+  if(c&&c.txt&&signed){launch(c.txt);bgCheck(c);return}}
 addEventListener('sdnet',render);render();
 $('bGoogle').onclick=()=>busy($('bGoogle'),()=>SDNET.signInGoogle(),'mIn');
 $('bIn').onclick=()=>busy($('bIn'),()=>{const [e,p]=creds();if(!e||!p)throw new Error('Type your email and password first.');return SDNET.signInEmail(e,p)},'mIn');
@@ -203,16 +223,15 @@ $('bForgot').onclick=()=>busy($('bForgot'),async()=>{const [e]=creds();if(!e)thr
 $('bVerified').onclick=()=>busy($('bVerified'),async()=>{await SDNET.checkVerified();if(SDNET.state==='verify')msg('mVer','Not verified yet. Open the link in the email first.')},'mVer');
 $('bResend').onclick=()=>busy($('bResend'),async()=>{await SDNET.resendVerify();msg('mVer','Sent. Check your inbox and spam folder.',true)},'mVer');
 $('bRetry').onclick=()=>busy($('bRetry'),()=>SDNET.recheck());
-for(const b of ['bOut1','bOut2','bOut3','bOut4'])$(b).onclick=()=>{started=false;SDNET.signOut()};
+for(const b of ['bOut1','bOut2','bOut3','bOut4'])$(b).onclick=()=>{started=false;flag(0);SDNET.signOut()};
 $('bReload').onclick=()=>location.reload();
-$('bPlay').onclick=()=>busy($('bPlay'),async()=>{const meta=await SDNET.gameInfo();if(!meta)throw new Error('No game uploaded yet.');launch(await getGame(meta))},'mOwn');
+$('bPlay').onclick=()=>busy($('bPlay'),async()=>{const meta=lastMeta||await SDNET.gameInfo();if(!meta)throw new Error('No game uploaded yet.');launch(await getGame(meta))},'mOwn');
 $('bUpload').onclick=()=>{$('upFile').value='';$('upFile').click()};
 $('upFile').onchange=()=>busy($('bUpload'),async()=>{const f=$('upFile').files[0];if(!f)return;const txt=await f.text();
   if(!/<title>Stardust Drifters/.test(txt)||txt.length<100000)throw new Error('That doesn’t look like the game file. Pick StardustDrifters.html.');
-  msg('mOwn','Uploading…',true);const m=await SDNET.uploadGame(txt);remember(m.v,txt);
+  msg('mOwn','Uploading…',true);const m=await SDNET.uploadGame(txt);remember(m.v,txt);lastMeta=m;
   $('ownInfo').textContent='Live version '+(m.ver?m.ver+', uploaded ':'uploaded ')+new Date(m.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(m.size/1024)+' KB).';$('bPlay').disabled=false;
   msg('mOwn','Uploaded version '+(m.ver||'?')+'. Your crew get this version the next time they open the site.',true)},'mOwn');
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
 </body>
