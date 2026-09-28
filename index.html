@@ -133,7 +133,8 @@ if(cfg&&!window.SDNET){
     N.saveScore=b=>{const o=clean(b),k={};for(const f of ['name','char','dust','kills','fast','endless','ts'])if(o[f]!==undefined)k[f]=o[f];return F.setDoc(F.doc(db,'scores',N.user.uid),k)};
     N.listScores=async()=>{const q=await F.getDocs(F.collection(db,'scores'));return q.docs.map(d=>Object.assign({uid:d.id},d.data()))};
     N.listAllow=async()=>{const q=await F.getDocs(F.collection(db,'allow'));return q.docs.map(d=>Object.assign({email:d.id},d.data()))};
-    N.addAllow=(e,note)=>F.setDoc(F.doc(db,'allow',lc(e)),{note:String(note||'').slice(0,60),added:Date.now()});
+    N.addAllow=(e,note,bonus)=>F.setDoc(F.doc(db,'allow',lc(e)),{note:String(note||'').slice(0,60),added:Date.now(),bonus:Math.max(0,Math.floor(+bonus||0))});
+    N.myBonus=async()=>{if(N.isAdmin)return 0;const s=await F.getDoc(F.doc(db,'allow',N.user.email));return s.exists()?Math.max(0,+s.data().bonus||0):0};
     N.removeAllow=e=>F.deleteDoc(F.doc(db,'allow',lc(e)));
     // the game itself lives in Firestore (only the crew can read it) in pieces well under the 1 MiB document limit
     const PIECE=300000;
@@ -141,7 +142,7 @@ if(cfg&&!window.SDNET){
     N.fetchGame=async(m)=>{m=m||await N.gameInfo();if(!m)return null;const parts=await Promise.all(Array.from({length:m.n},(_,i)=>F.getDoc(F.doc(db,'game','c'+i))));
       const txt=parts.map(p=>p.exists()?p.data().d:'').join('');if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt};
     N.uploadGame=async(txt)=>{const n=Math.ceil(txt.length/PIECE),b=F.writeBatch(db);for(let i=0;i<n;i++)b.set(F.doc(db,'game','c'+i),{d:txt.slice(i*PIECE,(i+1)*PIECE)});
-      const m={v:Date.now(),n,size:txt.length};b.set(F.doc(db,'game','meta'),m);await b.commit();return m};
+      const vm=/<meta name="sd-version" content="([^"]{1,20})"/.exec(txt),m={v:Date.now(),n,size:txt.length,ver:vm?vm[1]:''};b.set(F.doc(db,'game','meta'),m);await b.commit();return m};
     async function evaluate(u){
       if(!u){N.user=null;N.isAdmin=false;N.state='signedout';emit();return}
       N.user={uid:u.uid,email:lc(u.email),defaultName:String(u.displayName||'').split(' ')[0]};
@@ -182,7 +183,7 @@ function launch(txt){if(launched)return;launched=true;
 async function ready(){if(started)return;started=true;
   try{show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Checking the game version…';
     const meta=await SDNET.gameInfo();
-    if(SDNET.isAdmin){show('cOwner');$('ownInfo').textContent=meta?'Live version uploaded '+new Date(meta.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(meta.size/1024)+' KB).':'No game uploaded yet. Tap Upload new version and pick the StardustDrifters.html file Claude sent you.';$('bPlay').disabled=!meta;return}
+    if(SDNET.isAdmin){show('cOwner');$('ownInfo').textContent=meta?'Live version '+(meta.ver?meta.ver+', uploaded ':'uploaded ')+new Date(meta.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(meta.size/1024)+' KB).':'No game uploaded yet. Tap Upload new version and pick the StardustDrifters.html file Claude sent you.';$('bPlay').disabled=!meta;return}
     if(!meta){show('cWait');return}
     launch(await getGame(meta))}
   catch(e){started=false;show('cErr');$('errMsg').textContent=nice(e)}}
@@ -209,8 +210,8 @@ $('bUpload').onclick=()=>{$('upFile').value='';$('upFile').click()};
 $('upFile').onchange=()=>busy($('bUpload'),async()=>{const f=$('upFile').files[0];if(!f)return;const txt=await f.text();
   if(!/<title>Stardust Drifters/.test(txt)||txt.length<100000)throw new Error('That doesn’t look like the game file. Pick StardustDrifters.html.');
   msg('mOwn','Uploading…',true);const m=await SDNET.uploadGame(txt);remember(m.v,txt);
-  $('ownInfo').textContent='Live version uploaded '+new Date(m.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(m.size/1024)+' KB).';$('bPlay').disabled=false;
-  msg('mOwn','Uploaded. Your crew get this version the next time they open the site.',true)},'mOwn');
+  $('ownInfo').textContent='Live version '+(m.ver?m.ver+', uploaded ':'uploaded ')+new Date(m.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(m.size/1024)+' KB).';$('bPlay').disabled=false;
+  msg('mOwn','Uploaded version '+(m.ver||'?')+'. Your crew get this version the next time they open the site.',true)},'mOwn');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
