@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Stardust Drifters</title>
+<meta name="theme-color" content="#070b12">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stardust">
+<script>window.SD_PWA="<link rel=\"manifest\" href=\"manifest.webmanifest\">\n<link rel=\"icon\" href=\"icon-192.png\">\n<link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\">\n<meta name=\"apple-mobile-web-app-capable\" content=\"yes\">\n<meta name=\"mobile-web-app-capable\" content=\"yes\">\n<meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black-translucent\">\n<meta name=\"apple-mobile-web-app-title\" content=\"Stardust\">\n";</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Barlow:wght@400;600&display=swap">
+<script>window.SD_FIREBASE={"apiKey": "AIzaSyCKpVZk22cbXq2Q1XbzTWB313Sx27tMIbQ", "authDomain": "stardust-drifters.firebaseapp.com", "projectId": "stardust-drifters", "storageBucket": "stardust-drifters.firebasestorage.app", "messagingSenderId": "1020217118319", "appId": "1:1020217118319:web:11d0bad344c1614406879a"};</script>
+<style>
+:root{color-scheme:dark;--void:#070b12;--line:#243446;--hull:#e8eef2;--dim:#8fa3b3;--visor:#ff9d3d;--crystal:#3de8c0;
+  --display:"Chakra Petch","Segoe UI",system-ui,sans-serif;--body:"Barlow","Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--void);color:var(--hull);font-family:var(--body)}
+body{display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);
+  background:radial-gradient(ellipse 90% 55% at 50% -5%,rgba(255,157,61,.16),transparent 60%),radial-gradient(ellipse 80% 60% at 50% 110%,rgba(61,232,192,.12),transparent 60%),var(--void);min-height:100vh}
+.stars{position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 12% 20%,#fff8,transparent),radial-gradient(1px 1px at 72% 12%,#fff6,transparent),radial-gradient(1.5px 1.5px at 40% 70%,#fff7,transparent),radial-gradient(1px 1px at 85% 60%,#fff5,transparent),radial-gradient(1px 1px at 25% 85%,#fff6,transparent),radial-gradient(1.5px 1.5px at 60% 35%,#fff5,transparent)}
+main{position:relative;width:min(400px,100%);display:flex;flex-direction:column;gap:16px}
+.eyebrow{font:600 11px var(--display);letter-spacing:.3em;text-transform:uppercase;color:var(--crystal);text-align:center}
+h1{margin:4px 0 0;text-align:center;font:700 clamp(34px,11vw,48px)/1 var(--display);letter-spacing:.08em;color:var(--hull);text-shadow:0 0 24px rgba(255,157,61,.35)}
+h1 span{display:block;font-size:.62em;letter-spacing:.34em;color:var(--visor);margin-top:4px}
+.card{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;border:1px solid var(--line);background:rgba(13,22,34,.92)}
+.card h3{margin:0;font:700 16px var(--display);letter-spacing:.08em;text-transform:uppercase}
+.card p{margin:0;font-size:14px;line-height:1.45;color:#c9d6e0}
+.btn{appearance:none;border:1px solid var(--visor);background:var(--visor);color:#1a0d02;font:700 15px var(--display);letter-spacing:.1em;text-transform:uppercase;padding:13px 14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn.ghost{background:transparent;color:var(--hull);border-color:var(--line)}
+.btn:disabled{opacity:.5}
+.btn svg{width:18px;height:18px}
+.btnG{background:#fff;border-color:#fff;color:#1f1f1f;text-transform:none;letter-spacing:.02em}
+.or{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:12px}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font:600 10px var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.f input{appearance:none;border:1px solid var(--line);border-radius:10px;background:#0a121b;color:var(--hull);font:500 16px var(--body);padding:12px}
+.f input:focus{outline:2px solid var(--crystal);outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.two .btn{font-size:13px;padding:12px 8px}
+.link{appearance:none;background:none;border:0;color:var(--crystal);font:600 13px var(--body);cursor:pointer;padding:2px;align-self:center}
+.msg{min-height:1.2em;font-size:13px;color:#ffb3c7}.msg.ok{color:#7dffb0}
+.who{color:var(--visor);font-weight:600;word-break:break-all}
+.bar{height:8px;border-radius:4px;background:rgba(61,232,192,.12);border:1px solid rgba(61,232,192,.3);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--crystal);transition:width .2s}
+.foot{text-align:center;font-size:12px;color:var(--dim)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<main>
+  <div><div class="eyebrow">Crew members only</div><h1>STARDUST<span>DRIFTERS</span></h1></div>
+  <div class="card" id="cLoad"><h3 id="loadT">Connecting</h3><p id="loadMsg">Reaching the crew server…</p><div class="bar" id="loadBar" hidden><i id="loadFill"></i></div></div>
+  <div class="card" id="cIn" hidden>
+    <h3>Sign in to play</h3>
+    <p>Your progress follows you between your phone and computer.</p>
+    <button class="btn btnG" id="bGoogle"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>Continue with Google</button>
+    <div class="or">or use email</div>
+    <div class="f"><label for="iEmail">Email</label><input id="iEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false"></div>
+    <div class="f"><label for="iPass">Password</label><input id="iPass" type="password" autocomplete="current-password"></div>
+    <div class="two"><button class="btn" id="bIn">Sign in</button><button class="btn ghost" id="bUp">Create account</button></div>
+    <button class="link" id="bForgot">Forgot password?</button>
+    <div class="msg" id="mIn" role="status"></div>
+  </div>
+  <div class="card" id="cVerify" hidden>
+    <h3>Check your email</h3>
+    <p>We sent a verification link to <span class="who" id="verWho"></span>. Open it, then come back here.</p>
+    <button class="btn" id="bVerified">I've verified my email</button>
+    <div class="two"><button class="btn ghost" id="bResend">Send again</button><button class="btn ghost" id="bOut1">Sign out</button></div>
+    <div class="msg" id="mVer" role="status"></div>
+  </div>
+  <div class="card" id="cDenied" hidden>
+    <h3>Not on the crew list yet</h3>
+    <p>You're signed in as <span class="who" id="denWho"></span>, but this email hasn't been added to the crew. Send it to the game's owner so they can add you, then tap Try again.</p>
+    <div class="two"><button class="btn" id="bRetry">Try again</button><button class="btn ghost" id="bOut2">Sign out</button></div>
+  </div>
+  <div class="card" id="cOwner" hidden>
+    <h3>Welcome back, captain</h3>
+    <p id="ownInfo">Checking the game version…</p>
+    <button class="btn" id="bPlay">Launch game</button>
+    <button class="btn ghost" id="bUpload">Upload new version</button>
+    <input type="file" id="upFile" accept=".html,text/html" hidden>
+    <div class="msg" id="mOwn" role="status"></div>
+    <button class="link" id="bOut3">Sign out</button>
+  </div>
+  <div class="card" id="cWait" hidden>
+    <h3>No game here yet</h3>
+    <p>The owner hasn't uploaded the game yet. Check back soon.</p>
+    <button class="btn ghost" id="bOut4">Sign out</button>
+  </div>
+  <div class="card" id="cErr" hidden><h3>Can't connect</h3><p id="errMsg"></p><button class="btn" id="bReload">Reload</button></div>
+  <div class="foot">A private game for friends</div>
+</main>
+<script id="sdnet">
+/* Stardust Drifters crew website: Firebase sign-in, crew list check, saves and leaderboards.
+   The game reads window.SDNET and listens for the "sdnet" event; nothing here runs without window.SD_FIREBASE.
+   The same code runs in the sign-in page (loader) and inside the game once it has been loaded. */
+(async()=>{const cfg=window.SD_FIREBASE;
+if(cfg&&!window.SDNET){
+  const V='10.12.2',B='https://www.gstatic.com/firebasejs/'+V+'/';
+  const N={state:'loading',user:null,isAdmin:false,msg:''};window.SDNET=N;
+  const emit=()=>dispatchEvent(new Event('sdnet'));emit();
+  const lc=s=>String(s||'').trim().toLowerCase();
+  N.nice=e=>{const c=(e&&e.code)||'';return ({
+    'auth/invalid-credential':'Wrong email or password.','auth/wrong-password':'Wrong email or password.','auth/user-not-found':'No account with that email yet. Tap Create account.',
+    'auth/invalid-email':'That email address doesn’t look right.','auth/email-already-in-use':'That email already has an account. Tap Sign in instead.',
+    'auth/weak-password':'Use a password with at least 6 characters.','auth/too-many-requests':'Too many tries. Wait a minute and try again.',
+    'auth/network-request-failed':'No connection. Check your internet and try again.','auth/popup-blocked':'The sign-in window was blocked. Allow pop-ups for this site and try again.',
+    'auth/unauthorized-domain':'This website’s address hasn’t been approved in Firebase yet (Authentication → Settings → Authorized domains).',
+    'permission-denied':'The crew server refused this. Check the Firestore rules.','unavailable':'The crew server is unreachable right now. Try again.'
+  })[c]||((e&&e.message)||String(e))};
+  try{
+    const [{initializeApp},A,F]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-firestore.js')]);
+    const app=initializeApp(cfg),auth=A.getAuth(app),db=F.getFirestore(app);
+    const clean=o=>JSON.parse(JSON.stringify(o||{}));
+    N.signInGoogle=async()=>{const p=new A.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+      try{await A.signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')await A.signInWithRedirect(auth,p);else throw e}};
+    N.signInEmail=(e,p)=>A.signInWithEmailAndPassword(auth,lc(e),p);
+    N.signUpEmail=async(e,p)=>{const c=await A.createUserWithEmailAndPassword(auth,lc(e),p);await A.sendEmailVerification(c.user)};
+    N.resendVerify=async()=>{if(auth.currentUser)await A.sendEmailVerification(auth.currentUser)};
+    N.checkVerified=async()=>{if(!auth.currentUser)return;await A.reload(auth.currentUser);await auth.currentUser.getIdToken(true);await evaluate(auth.currentUser)};
+    N.recheck=async()=>{if(auth.currentUser){await auth.currentUser.getIdToken(true);await evaluate(auth.currentUser)}};
+    N.resetPassword=e=>A.sendPasswordResetEmail(auth,lc(e));
+    N.signOut=()=>A.signOut(auth);
+    N.loadSave=async()=>{const s=await F.getDoc(F.doc(db,'saves',N.user.uid));return s.exists()?s.data():null};
+    N.saveSave=b=>F.setDoc(F.doc(db,'saves',N.user.uid),clean(b));
+    N.loadScore=async()=>{const s=await F.getDoc(F.doc(db,'scores',N.user.uid));return s.exists()?s.data():null};
+    N.saveScore=b=>{const o=clean(b),k={};for(const f of ['name','char','dust','kills','fast','endless','ts'])if(o[f]!==undefined)k[f]=o[f];return F.setDoc(F.doc(db,'scores',N.user.uid),k)};
+    N.listScores=async()=>{const q=await F.getDocs(F.collection(db,'scores'));return q.docs.map(d=>Object.assign({uid:d.id},d.data()))};
+    N.listAllow=async()=>{const q=await F.getDocs(F.collection(db,'allow'));return q.docs.map(d=>Object.assign({email:d.id},d.data()))};
+    N.addAllow=(e,note)=>F.setDoc(F.doc(db,'allow',lc(e)),{note:String(note||'').slice(0,60),added:Date.now()});
+    N.removeAllow=e=>F.deleteDoc(F.doc(db,'allow',lc(e)));
+    // the game itself lives in Firestore (only the crew can read it) in pieces well under the 1 MiB document limit
+    const PIECE=300000;
+    N.gameInfo=async()=>{const s=await F.getDoc(F.doc(db,'game','meta'));return s.exists()?s.data():null};
+    N.fetchGame=async(m)=>{m=m||await N.gameInfo();if(!m)return null;const parts=await Promise.all(Array.from({length:m.n},(_,i)=>F.getDoc(F.doc(db,'game','c'+i))));
+      const txt=parts.map(p=>p.exists()?p.data().d:'').join('');if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt};
+    N.uploadGame=async(txt)=>{const n=Math.ceil(txt.length/PIECE),b=F.writeBatch(db);for(let i=0;i<n;i++)b.set(F.doc(db,'game','c'+i),{d:txt.slice(i*PIECE,(i+1)*PIECE)});
+      const m={v:Date.now(),n,size:txt.length};b.set(F.doc(db,'game','meta'),m);await b.commit();return m};
+    async function evaluate(u){
+      if(!u){N.user=null;N.isAdmin=false;N.state='signedout';emit();return}
+      N.user={uid:u.uid,email:lc(u.email),defaultName:String(u.displayName||'').split(' ')[0]};
+      if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){N.state='verify';emit();return}
+      N.state='loading';emit();
+      // the owner can list the crew list; everyone else can only check their own entry
+      let admin=false;try{await F.getDocs(F.query(F.collection(db,'allow'),F.limit(1)));admin=true}catch(_){}
+      let ok=admin;if(!ok){try{ok=(await F.getDoc(F.doc(db,'allow',N.user.email))).exists()}catch(_){ok=false}}
+      N.isAdmin=admin;N.state=ok?'ready':'denied';emit()}
+    try{await A.getRedirectResult(auth)}catch(e){N.msg=N.nice(e)}
+    A.onAuthStateChanged(auth,u=>{evaluate(u).catch(e=>{N.state='error';N.msg=N.nice(e);emit()})});
+  }catch(e){N.state='error';N.msg='Could not reach the crew server. Check your connection and reload.';emit()}
+}})();
+
+</script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const CARDS=['cLoad','cIn','cVerify','cDenied','cOwner','cWait','cErr'];
+const show=id=>CARDS.forEach(c=>$(c).hidden=c!==id);
+const msg=(id,t,ok)=>{const m=$(id);m.textContent=t||'';m.classList.toggle('ok',!!ok)};
+const nice=e=>window.SDNET&&SDNET.nice?SDNET.nice(e):String(e&&e.message||e);
+const busy=async(btn,fn,mid)=>{if(btn.disabled)return;btn.disabled=true;if(mid)msg(mid,'');try{await fn()}catch(e){if(e&&e.code==='auth/popup-closed-by-user')return;if(mid)msg(mid,nice(e))}finally{btn.disabled=false}};
+const creds=()=>[$('iEmail').value.trim(),$('iPass').value];
+const CK='sd_game_cache';
+let launched=false,started=false;
+function cached(){try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}}
+function remember(v,txt){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(_){try{localStorage.removeItem(CK)}catch(__){}}}
+async function getGame(meta){const c=cached();if(c&&c.v===meta.v&&c.txt&&c.txt.length===meta.size)return c.txt;
+  show('cLoad');$('loadT').textContent='Downloading';$('loadMsg').textContent='Getting the latest version of the game…';$('loadBar').hidden=false;$('loadFill').style.width='30%';
+  const txt=await SDNET.fetchGame(meta);$('loadFill').style.width='100%';remember(meta.v,txt);return txt}
+function launch(txt){if(launched)return;launched=true;
+  const head='<script>window.SD_FIREBASE='+JSON.stringify(window.SD_FIREBASE)+';<\/script>\n'+(window.SD_PWA||'');
+  const net='<script>'+$('sdnet').textContent+'<\/script>';
+  let html=txt.replace(/<head>/i,'<head>\n'+head);
+  html=html.lastIndexOf('</body>')>0?html.slice(0,html.lastIndexOf('</body>'))+net+'\n'+html.slice(html.lastIndexOf('</body>')):html+net;
+  document.open();document.write(html);document.close()}
+async function ready(){if(started)return;started=true;
+  try{show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Checking the game version…';
+    const meta=await SDNET.gameInfo();
+    if(SDNET.isAdmin){show('cOwner');$('ownInfo').textContent=meta?'Live version uploaded '+new Date(meta.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(meta.size/1024)+' KB).':'No game uploaded yet. Tap Upload new version and pick the StardustDrifters.html file Claude sent you.';$('bPlay').disabled=!meta;return}
+    if(!meta){show('cWait');return}
+    launch(await getGame(meta))}
+  catch(e){started=false;show('cErr');$('errMsg').textContent=nice(e)}}
+function render(){const N=window.SDNET;if(!N||launched)return;
+  if(N.state!=='ready')started=false;
+  if(N.state==='loading'){show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Reaching the crew server…';$('loadBar').hidden=true}
+  else if(N.state==='signedout'){show('cIn');if(N.msg)msg('mIn',N.msg)}
+  else if(N.state==='verify'){show('cVerify');$('verWho').textContent=N.user.email}
+  else if(N.state==='denied'){show('cDenied');$('denWho').textContent=N.user.email}
+  else if(N.state==='error'){show('cErr');$('errMsg').textContent=N.msg||'Something went wrong.'}
+  else if(N.state==='ready')ready()}
+addEventListener('sdnet',render);render();
+$('bGoogle').onclick=()=>busy($('bGoogle'),()=>SDNET.signInGoogle(),'mIn');
+$('bIn').onclick=()=>busy($('bIn'),()=>{const [e,p]=creds();if(!e||!p)throw new Error('Type your email and password first.');return SDNET.signInEmail(e,p)},'mIn');
+$('bUp').onclick=()=>busy($('bUp'),()=>{const [e,p]=creds();if(!e||!p)throw new Error('Type an email and pick a password (6+ characters), then tap Create account.');return SDNET.signUpEmail(e,p)},'mIn');
+$('bForgot').onclick=()=>busy($('bForgot'),async()=>{const [e]=creds();if(!e)throw new Error('Type your email first, then tap Forgot password.');await SDNET.resetPassword(e);msg('mIn','Password reset email sent.',true)},'mIn');
+$('bVerified').onclick=()=>busy($('bVerified'),async()=>{await SDNET.checkVerified();if(SDNET.state==='verify')msg('mVer','Not verified yet. Open the link in the email first.')},'mVer');
+$('bResend').onclick=()=>busy($('bResend'),async()=>{await SDNET.resendVerify();msg('mVer','Sent. Check your inbox and spam folder.',true)},'mVer');
+$('bRetry').onclick=()=>busy($('bRetry'),()=>SDNET.recheck());
+for(const b of ['bOut1','bOut2','bOut3','bOut4'])$(b).onclick=()=>{started=false;SDNET.signOut()};
+$('bReload').onclick=()=>location.reload();
+$('bPlay').onclick=()=>busy($('bPlay'),async()=>{const meta=await SDNET.gameInfo();if(!meta)throw new Error('No game uploaded yet.');launch(await getGame(meta))},'mOwn');
+$('bUpload').onclick=()=>{$('upFile').value='';$('upFile').click()};
+$('upFile').onchange=()=>busy($('bUpload'),async()=>{const f=$('upFile').files[0];if(!f)return;const txt=await f.text();
+  if(!/<title>Stardust Drifters/.test(txt)||txt.length<100000)throw new Error('That doesn’t look like the game file. Pick StardustDrifters.html.');
+  msg('mOwn','Uploading…',true);const m=await SDNET.uploadGame(txt);remember(m.v,txt);
+  $('ownInfo').textContent='Live version uploaded '+new Date(m.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(m.size/1024)+' KB).';$('bPlay').disabled=false;
+  msg('mOwn','Uploaded. Your crew get this version the next time they open the site.',true)},'mOwn');
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
