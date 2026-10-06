@@ -103,6 +103,15 @@ h1 span{display:block;font-size:.62em;letter-spacing:.34em;color:var(--visor);ma
   <div class="card" id="cErr" hidden><h3>Can't connect</h3><p id="errMsg"></p><button class="btn" id="bReload">Reload</button></div>
   <div class="foot">A private game for friends</div>
 </main>
+<script id="sdmus">
+// planet music kept apart from the rest of the game: split(txt) -> {g: game with a marker where the music was, m: the music tag}; join puts it back
+window.SDMUS=window.SDMUS||(()=>{const TAG='<script>window.__MUS=',PH='<script>window.__MUS=null/*SDMUS*/<\/script>',END='<\/script>';
+  const split=txt=>{const i=txt.indexOf(TAG);if(i<0||txt.indexOf(TAG,i+1)>=0||txt.indexOf(PH)>=0)return null;const e=txt.indexOf(END,i);if(e<0)return null;
+    return {g:txt.slice(0,i)+PH+txt.slice(e+END.length),m:txt.slice(i,e+END.length)}};
+  const join=(g,m)=>{const i=g.indexOf(PH);return i<0?g:g.slice(0,i)+m+g.slice(i+PH.length)};
+  const hash=x=>{let h=0x811c9dc5,k=0x9e3779b1;for(let i=0;i<x.length;i++){const c=x.charCodeAt(i);h=Math.imul(h^c,0x01000193);k=Math.imul(k^c,0x85ebca6b)}return (h>>>0).toString(36)+(k>>>0).toString(36)+'-'+x.length};
+  return {split,join,hash,PH}})();
+</script>
 <script id="sdnet">
 /* Stardust Drifters crew website: Firebase sign-in, crew list check, saves and leaderboards.
    The game reads window.SDNET and listens for the "sdnet" event; nothing here runs without window.SD_FIREBASE.
@@ -147,13 +156,24 @@ if(cfg&&!window.SDNET){
     const PIECE=300000;
     N.gameInfo=async()=>{const s=await F.getDoc(F.doc(db,'game','meta'));return s.exists()?s.data():null};
     N.fetchGame=async(m,prog)=>{m=m||await N.gameInfo();if(!m)return null;const pre=m.p||'c';let done=0;
-      const parts=await Promise.all(Array.from({length:m.n},(_,i)=>F.getDoc(F.doc(db,'game',pre+i)).then(d=>{done++;if(prog)prog(done/m.n);return d})));
-      const txt=parts.map(p=>p.exists()?p.data().d:'').join('');if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt};
+      const parts=await Promise.all(Array.from({length:m.n},(_,i)=>F.getDoc(F.doc(db,'game',pre+i)).then(d=>{done++;if(prog)prog(done/m.n*(m.mh?0.7:1));return d})));
+      let txt=parts.map(p=>p.exists()?p.data().d:'').join('');
+      if(m.mh){if(txt.length!==m.gs)throw new Error('The game download was incomplete. Reload to try again.');
+        let mus=window.SDMUS.get?await window.SDMUS.get(m.mh).catch(()=>null):null;
+        if(!mus){const mp=await Promise.all(Array.from({length:m.mn},(_,i)=>F.getDoc(F.doc(db,'game',m.mp+i))));mus=mp.map(p=>p.exists()?p.data().d:'').join('');
+          if(mus.length!==m.ms)throw new Error('The music download was incomplete. Reload to try again.')}
+        txt=window.SDMUS.join(txt,mus)}
+      if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt};
     // big games go up in several smaller saves (Firebase takes about 10 MB per save), into the piece set the live version is NOT using,
     // and the version info is written last, so the crew never download a half-uploaded game
-    N.uploadGame=async(txt,prog)=>{const n=Math.ceil(txt.length/PIECE),old=await N.gameInfo().catch(()=>null),pre=old&&old.p==='a'?'b':'a',PER=15;
-      for(let s=0;s<n;s+=PER){const b=F.writeBatch(db);for(let i=s;i<Math.min(n,s+PER);i++)b.set(F.doc(db,'game',pre+i),{d:txt.slice(i*PIECE,(i+1)*PIECE)});await b.commit();if(prog)prog(Math.min(n,s+PER)/n)}
-      const vm=/<meta name="sd-version" content="([^"]{1,20})"/.exec(txt),m={v:Date.now(),n,p:pre,size:txt.length,ver:vm?vm[1]:''};await F.setDoc(F.doc(db,'game','meta'),m);return m};
+    // the planet music goes in its own pieces (x0.. or y0..) and is only sent again when it changed
+    N.uploadGame=async(full,prog)=>{const old=await N.gameInfo().catch(()=>null),pre=old&&old.p==='a'?'b':'a',PER=15,sp=window.SDMUS&&window.SDMUS.split(full);
+      const put=async(x,p,f0,f1)=>{const n=Math.ceil(x.length/PIECE);for(let s=0;s<n;s+=PER){const b=F.writeBatch(db);for(let i=s;i<Math.min(n,s+PER);i++)b.set(F.doc(db,'game',p+i),{d:x.slice(i*PIECE,(i+1)*PIECE)});await b.commit();if(prog)prog(f0+(f1-f0)*Math.min(n,s+PER)/n)}return n};
+      const txt=sp?sp.g:full,vm=/<meta name="sd-version" content="([^"]{1,20})"/.exec(full),m={v:Date.now(),p:pre,size:full.length,ver:vm?vm[1]:''};
+      if(sp){m.mh=window.SDMUS.hash(sp.m);m.ms=sp.m.length;m.gs=txt.length;
+        if(old&&old.mh===m.mh&&old.mp&&old.mn){m.mp=old.mp;m.mn=old.mn;m.mkept=true}
+        else{m.mp=old&&old.mp==='x'?'y':'x';m.mn=await put(sp.m,m.mp,0,0.35)}}
+      m.n=await put(txt,pre,sp&&!m.mkept?0.35:0,1);delete m.mkept;await F.setDoc(F.doc(db,'game','meta'),m);return m};
     async function evaluate(u){
       if(!u){N.user=null;N.isAdmin=false;N.state='signedout';emit();return}
       N.user={uid:u.uid,email:lc(u.email),defaultName:String(u.displayName||'').split(' ')[0]};
@@ -186,17 +206,21 @@ let launched=false,started=false,lastMeta=null;
 const flag=v=>{try{v?localStorage.setItem(SK,'1'):localStorage.removeItem(SK)}catch(_){}};
 // the copy of the game kept on this device: IndexedDB (room for big games); older sign-in pages kept it in localStorage
 const idb=()=>new Promise((ok,no)=>{try{const r=indexedDB.open('sd_game',1);r.onupgradeneeded=()=>r.result.createObjectStore('g');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}catch(e){no(e)}});
-async function cached(){try{const d=await idb();const c=await new Promise((ok,no)=>{const q=d.transaction('g').objectStore('g').get('game');q.onsuccess=()=>ok(q.result||null);q.onerror=()=>no(q.error)});d.close();if(c)return c}catch(_){}
+const idbGet=async k=>{const d=await idb();try{return await new Promise((ok,no)=>{const q=d.transaction('g').objectStore('g').get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>no(q.error)})}finally{d.close()}};
+SDMUS.get=async h=>{const x=await idbGet('music');return x&&x.h===h&&x.txt?x.txt:null};
+async function cached(){try{const c=await idbGet('game');if(c&&c.txt&&c.txt.indexOf(SDMUS.PH)>=0){const x=await idbGet('music');return x&&x.txt?{v:c.v,txt:SDMUS.join(c.txt,x.txt)}:null}if(c)return c}catch(_){}
   try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}}
-async function remember(v,txt){try{const d=await idb();await new Promise((ok,no)=>{const t=d.transaction('g','readwrite');t.objectStore('g').put({v,txt},'game');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
+async function remember(v,txt){try{const sp=SDMUS.split(txt),d=await idb();await new Promise((ok,no)=>{const t=d.transaction('g','readwrite'),st=t.objectStore('g');
+      if(sp){st.put({v,txt:sp.g},'game');st.put({h:SDMUS.hash(sp.m),txt:sp.m},'music')}else st.put({v,txt},'game');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
     try{localStorage.removeItem(CK)}catch(_){}try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}}
   catch(_){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(__){try{localStorage.removeItem(CK)}catch(___){}}}}
 async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&c.txt.length===meta.size)return c.txt;
   show('cLoad');$('loadT').textContent='Downloading';$('loadMsg').textContent='Getting the latest version of the game…';$('loadBar').hidden=false;$('loadFill').style.width='30%';
-  if(meta.size>1e6)$('loadMsg').textContent='Getting the latest version of the game ('+Math.round(meta.size/1048576)+' MB, only once per version)…';
+  const musOk=meta.mh&&await SDMUS.get(meta.mh).catch(()=>null),need=meta.mh&&musOk?meta.gs:meta.size;
+  if(need>1e6)$('loadMsg').textContent='Getting the latest version of the game'+(meta.mh&&!musOk?' and its music':'')+' ('+Math.max(1,Math.round(need/1048576))+' MB, only once per version)…';
   const txt=await SDNET.fetchGame(meta,f=>{$('loadFill').style.width=Math.round(5+95*f)+'%'});$('loadFill').style.width='100%';await remember(meta.v,txt);return txt}
 function launch(txt){if(launched)return;launched=true;
-  const head='<script>window.SD_FIREBASE='+JSON.stringify(window.SD_FIREBASE)+';<\/script>\n'+(window.SD_PWA||'');
+  const head='<script>window.SD_FIREBASE='+JSON.stringify(window.SD_FIREBASE)+';<\/script>\n'+(window.SD_PWA||'')+'<script>'+$('sdmus').textContent+'<\/script>\n';
   const net='<script>'+$('sdnet').textContent+'<\/script>';
   let html=txt.replace(/<head>/i,'<head>\n'+head);
   html=html.lastIndexOf('</body>')>0?html.slice(0,html.lastIndexOf('</body>'))+net+'\n'+html.slice(html.lastIndexOf('</body>')):html+net;
