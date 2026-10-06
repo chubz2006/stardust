@@ -146,10 +146,14 @@ if(cfg&&!window.SDNET){
     // the game itself lives in Firestore (only the crew can read it) in pieces well under the 1 MiB document limit
     const PIECE=300000;
     N.gameInfo=async()=>{const s=await F.getDoc(F.doc(db,'game','meta'));return s.exists()?s.data():null};
-    N.fetchGame=async(m)=>{m=m||await N.gameInfo();if(!m)return null;const parts=await Promise.all(Array.from({length:m.n},(_,i)=>F.getDoc(F.doc(db,'game','c'+i))));
+    N.fetchGame=async(m,prog)=>{m=m||await N.gameInfo();if(!m)return null;const pre=m.p||'c';let done=0;
+      const parts=await Promise.all(Array.from({length:m.n},(_,i)=>F.getDoc(F.doc(db,'game',pre+i)).then(d=>{done++;if(prog)prog(done/m.n);return d})));
       const txt=parts.map(p=>p.exists()?p.data().d:'').join('');if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt};
-    N.uploadGame=async(txt)=>{const n=Math.ceil(txt.length/PIECE),b=F.writeBatch(db);for(let i=0;i<n;i++)b.set(F.doc(db,'game','c'+i),{d:txt.slice(i*PIECE,(i+1)*PIECE)});
-      const vm=/<meta name="sd-version" content="([^"]{1,20})"/.exec(txt),m={v:Date.now(),n,size:txt.length,ver:vm?vm[1]:''};b.set(F.doc(db,'game','meta'),m);await b.commit();return m};
+    // big games go up in several smaller saves (Firebase takes about 10 MB per save), into the piece set the live version is NOT using,
+    // and the version info is written last, so the crew never download a half-uploaded game
+    N.uploadGame=async(txt,prog)=>{const n=Math.ceil(txt.length/PIECE),old=await N.gameInfo().catch(()=>null),pre=old&&old.p==='a'?'b':'a',PER=15;
+      for(let s=0;s<n;s+=PER){const b=F.writeBatch(db);for(let i=s;i<Math.min(n,s+PER);i++)b.set(F.doc(db,'game',pre+i),{d:txt.slice(i*PIECE,(i+1)*PIECE)});await b.commit();if(prog)prog(Math.min(n,s+PER)/n)}
+      const vm=/<meta name="sd-version" content="([^"]{1,20})"/.exec(txt),m={v:Date.now(),n,p:pre,size:txt.length,ver:vm?vm[1]:''};await F.setDoc(F.doc(db,'game','meta'),m);return m};
     async function evaluate(u){
       if(!u){N.user=null;N.isAdmin=false;N.state='signedout';emit();return}
       N.user={uid:u.uid,email:lc(u.email),defaultName:String(u.displayName||'').split(' ')[0]};
@@ -180,11 +184,17 @@ const creds=()=>[$('iEmail').value.trim(),$('iPass').value];
 const CK='sd_game_cache',SK='sd_signed';
 let launched=false,started=false,lastMeta=null;
 const flag=v=>{try{v?localStorage.setItem(SK,'1'):localStorage.removeItem(SK)}catch(_){}};
-function cached(){try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}}
-function remember(v,txt){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(_){try{localStorage.removeItem(CK)}catch(__){}}}
-async function getGame(meta){const c=cached();if(c&&c.v===meta.v&&c.txt&&c.txt.length===meta.size)return c.txt;
+// the copy of the game kept on this device: IndexedDB (room for big games); older sign-in pages kept it in localStorage
+const idb=()=>new Promise((ok,no)=>{try{const r=indexedDB.open('sd_game',1);r.onupgradeneeded=()=>r.result.createObjectStore('g');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}catch(e){no(e)}});
+async function cached(){try{const d=await idb();const c=await new Promise((ok,no)=>{const q=d.transaction('g').objectStore('g').get('game');q.onsuccess=()=>ok(q.result||null);q.onerror=()=>no(q.error)});d.close();if(c)return c}catch(_){}
+  try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}}
+async function remember(v,txt){try{const d=await idb();await new Promise((ok,no)=>{const t=d.transaction('g','readwrite');t.objectStore('g').put({v,txt},'game');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
+    try{localStorage.removeItem(CK)}catch(_){}try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}}
+  catch(_){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(__){try{localStorage.removeItem(CK)}catch(___){}}}}
+async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&c.txt.length===meta.size)return c.txt;
   show('cLoad');$('loadT').textContent='Downloading';$('loadMsg').textContent='Getting the latest version of the game…';$('loadBar').hidden=false;$('loadFill').style.width='30%';
-  const txt=await SDNET.fetchGame(meta);$('loadFill').style.width='100%';remember(meta.v,txt);return txt}
+  if(meta.size>1e6)$('loadMsg').textContent='Getting the latest version of the game ('+Math.round(meta.size/1048576)+' MB, only once per version)…';
+  const txt=await SDNET.fetchGame(meta,f=>{$('loadFill').style.width=Math.round(5+95*f)+'%'});$('loadFill').style.width='100%';await remember(meta.v,txt);return txt}
 function launch(txt){if(launched)return;launched=true;
   const head='<script>window.SD_FIREBASE='+JSON.stringify(window.SD_FIREBASE)+';<\/script>\n'+(window.SD_PWA||'');
   const net='<script>'+$('sdnet').textContent+'<\/script>';
@@ -194,7 +204,7 @@ function launch(txt){if(launched)return;launched=true;
 // after the game has started from this device's copy: once signed in, fetch a newer version for next time and tell the game
 function bgCheck(c){let n=0;const iv=setInterval(async()=>{const N=window.SDNET;if(++n>240){clearInterval(iv);return}
   if(!N||N.state!=='ready')return;clearInterval(iv);
-  try{const meta=await N.gameInfo();if(!meta||meta.v===c.v)return;const txt=await N.fetchGame(meta);remember(meta.v,txt);
+  try{const meta=await N.gameInfo();if(!meta||meta.v===c.v)return;const txt=await N.fetchGame(meta);await remember(meta.v,txt);
     dispatchEvent(new CustomEvent('sdupdate',{detail:{ver:meta.ver||''}}))}catch(_){}},500)}
 async function ready(){if(started)return;started=true;flag(1);
   try{show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Checking the game version…';
@@ -213,9 +223,10 @@ function render(){const N=window.SDNET;if(!N||launched)return;
   else if(N.state==='ready')ready()}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 // returning players start instantly from the copy saved on this device; the game's own sign-in screen takes over from there
-{const c=cached();let signed=false;try{signed=localStorage.getItem(SK)==='1'}catch(_){}
-  if(c&&c.txt&&signed){launch(c.txt);bgCheck(c);return}}
-addEventListener('sdnet',render);render();
+(async()=>{let signed=false;try{signed=localStorage.getItem(SK)==='1'}catch(_){}
+  const c=signed?await cached():null;
+  if(c&&c.txt&&signed){launch(c.txt);bgCheck(c);return}
+  addEventListener('sdnet',render);render()})();
 $('bGoogle').onclick=()=>busy($('bGoogle'),()=>SDNET.signInGoogle(),'mIn');
 $('bIn').onclick=()=>busy($('bIn'),()=>{const [e,p]=creds();if(!e||!p)throw new Error('Type your email and password first.');return SDNET.signInEmail(e,p)},'mIn');
 $('bUp').onclick=()=>busy($('bUp'),()=>{const [e,p]=creds();if(!e||!p)throw new Error('Type an email and pick a password (6+ characters), then tap Create account.');return SDNET.signUpEmail(e,p)},'mIn');
@@ -229,7 +240,7 @@ $('bPlay').onclick=()=>busy($('bPlay'),async()=>{const meta=lastMeta||await SDNE
 $('bUpload').onclick=()=>{$('upFile').value='';$('upFile').click()};
 $('upFile').onchange=()=>busy($('bUpload'),async()=>{const f=$('upFile').files[0];if(!f)return;const txt=await f.text();
   if(!/<title>Stardust Drifters/.test(txt)||txt.length<100000)throw new Error('That doesn’t look like the game file. Pick StardustDrifters.html.');
-  msg('mOwn','Uploading…',true);const m=await SDNET.uploadGame(txt);remember(m.v,txt);lastMeta=m;
+  msg('mOwn','Uploading…',true);const m=await SDNET.uploadGame(txt,f=>msg('mOwn','Uploading… '+Math.round(f*100)+'%',true));await remember(m.v,txt);lastMeta=m;
   $('ownInfo').textContent='Live version '+(m.ver?m.ver+', uploaded ':'uploaded ')+new Date(m.v).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})+' ('+Math.round(m.size/1024)+' KB).';$('bPlay').disabled=false;
   msg('mOwn','Uploaded version '+(m.ver||'?')+'. Your crew get this version the next time they open the site.',true)},'mOwn');
 })();
