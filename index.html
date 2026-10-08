@@ -53,7 +53,7 @@ h1 span{display:block;font-size:.62em;letter-spacing:.34em;color:var(--visor);ma
 .link{appearance:none;background:none;border:0;color:var(--crystal);font:600 13px var(--body);cursor:pointer;padding:2px;align-self:center}
 .msg{min-height:1.2em;font-size:13px;color:#ffb3c7}.msg.ok{color:#7dffb0}
 .who{color:var(--visor);font-weight:600;word-break:break-all}
-.bar{position:relative;height:8px;border-radius:4px;background:rgba(61,232,192,.12);border:1px solid rgba(61,232,192,.3);overflow:hidden}.bar.run i{position:absolute;top:0;bottom:0;left:0;width:40%!important;background:linear-gradient(90deg,rgba(61,232,192,0),#3de8c0,rgba(61,232,192,0));animation:run 1.3s ease-in-out infinite;transition:none;will-change:transform}@keyframes run{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}.bar i{display:block;height:100%;width:0;background:var(--crystal);transition:width .2s}
+.bar{height:8px;border-radius:4px;background:rgba(61,232,192,.12);border:1px solid rgba(61,232,192,.3);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--crystal);transition:width .2s}
 .foot{text-align:center;font-size:12px;color:var(--dim)}
 [hidden]{display:none!important}
 /* v0.5.0: the sign-in look from the game (UI72:signin) */
@@ -63,7 +63,7 @@ main{width:100%;max-width:none;min-height:100vh;min-height:100dvh;gap:0;justify-
 .logo h1.logoSvg{display:block;width:100%;max-width:400px;margin:0 auto;font-size:16px;line-height:0;text-shadow:none;filter:drop-shadow(0 4px 18px rgba(111,229,255,.18))}
 .logo h1.logoSvg svg{display:block;width:100%;height:auto;overflow:visible}
 .hero{flex:1;display:grid;place-items:center;min-height:200px;padding:8px 0}
-.hero img{display:block;width:220px;height:250px;max-height:34vh;object-fit:contain;animation:bob 2.6s ease-in-out infinite;will-change:transform}
+.hero img{display:block;width:190px;height:256px;max-height:34vh;object-fit:contain;filter:drop-shadow(0 12px 22px rgba(0,0,0,.5));animation:bob 2.6s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-6px)}}
 .sheet{width:100%;max-width:460px;margin:0 auto;border-radius:22px 22px 0 0;background:rgba(11,19,29,.95);border:1px solid #2c4058;border-bottom:0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
 .sheet .card{background:none;border:0;padding:0;box-shadow:none}
@@ -77,16 +77,16 @@ main{width:100%;max-width:none;min-height:100vh;min-height:100dvh;gap:0;justify-
 .foot2{text-align:center;font-size:13px;color:#9fb1c1;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:2px 6px}
 .foot2 .link{padding:2px;font-size:13px;color:#9fb1c1;text-decoration:none;border-bottom:1px solid rgba(159,177,193,.5)}
 .stars,main>.foot{display:none}
-
+@media (min-width:700px){.hero img{width:228px;height:307px}}
 </style>
 </head>
 <body>
 <div class="stars"></div>
 <main>
   <div class="logo"><h1 class="logoT logoSvg" aria-label="Stardust Drifters"><svg class="lgL1" viewBox="0 0 320 130" aria-hidden="true" focusable="false"><defs><linearGradient id="lgwG" x1="0" y1="0" x2="0" y2="1"><stop offset=".2" stop-color="#ffffff"/><stop offset="1" stop-color="#bfe9f2"/></linearGradient><linearGradient id="lgoG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc47a"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient><radialGradient id="lgcG"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#9ff7e2"/><stop offset="1" stop-color="#3de8c0" stop-opacity="0"/></radialGradient></defs><g transform="rotate(-9 160 70)"><path d="M12 70 A148 30 0 0 1 308 70" fill="none" stroke="#3de8c0" stroke-width="2.2" opacity=".55"/></g><text x="160" y="60" text-anchor="middle" font-family="'Chakra Petch','Segoe UI',system-ui,sans-serif" font-weight="700" font-size="52" fill="url(#lgwG)" textLength="292" lengthAdjust="spacingAndGlyphs" stroke="#0a0f17" stroke-width="1">STARDUST</text><text x="160" y="106" text-anchor="middle" font-family="'Chakra Petch','Segoe UI',system-ui,sans-serif" font-weight="700" font-size="40" fill="url(#lgoG)" textLength="250" lengthAdjust="spacingAndGlyphs">DRIFTERS</text><g transform="rotate(-9 160 70)"><path d="M308 70 A148 30 0 0 1 12 70" fill="none" stroke="#3de8c0" stroke-width="2.6"/><circle cx="292" cy="85" r="13" fill="url(#lgcG)" class="lgTw"/><circle cx="292" cy="85" r="3.2" fill="#fff"/></g></svg></h1></div>
-  <div class="hero"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" onload="if(!this.dataset.k){this.dataset.k=1;var s=null;try{s=localStorage.getItem('sd_hero')}catch(e){}if(s&&s.indexOf('data:image/')===0)this.src=s;else this.style.visibility='hidden'}"></div>
+  <div class="hero"><img src="astro.png" alt=""></div>
   <div class="sheet">
-  <div class="card" id="cLoad"><h3 id="loadT">Connecting</h3><p id="loadMsg">Reaching the crew server…</p><div class="bar run" id="loadBar"><i id="loadFill"></i></div></div>
+  <div class="card" id="cLoad"><h3 id="loadT">Connecting</h3><p id="loadMsg">Reaching the crew server…</p><div class="bar" id="loadBar" hidden><i id="loadFill"></i></div></div>
   <div class="card" id="cIn" hidden>
     <h3>Welcome back, drifter</h3>
     <button class="btn btnG" id="bGoogle"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>Continue with Google</button>
@@ -136,7 +136,18 @@ window.SDMUS=window.SDMUS||(()=>{const TAG='<script>window.__MUS=',PH='<script>w
     return {g:txt.slice(0,i)+PH+txt.slice(e+END.length),m:txt.slice(i,e+END.length)}};
   const join=(g,m)=>{const i=g.indexOf(PH);return i<0?g:g.slice(0,i)+m+g.slice(i+PH.length)};
   const hash=x=>{let h=0x811c9dc5,k=0x9e3779b1;for(let i=0;i<x.length;i++){const c=x.charCodeAt(i);h=Math.imul(h^c,0x01000193);k=Math.imul(k^c,0x85ebca6b)}return (h>>>0).toString(36)+(k>>>0).toString(36)+'-'+x.length};
-  return {split,join,hash,PH}})();
+  // songs(m) -> [[key, its JSON text]...] in order; build(list) -> music tag (the page uploads the rebuilt form, so sizes always match)
+  const songs=m=>{let b=m.slice(TAG.length,m.lastIndexOf(END)).trim();if(b.endsWith(';'))b=b.slice(0,-1);const o=JSON.parse(b);return Object.keys(o).map(k=>[k,JSON.stringify(o[k])])};
+  const build=l=>TAG+'{'+l.map(([k,v])=>JSON.stringify(k)+':'+v).join(',')+'};'+END;
+  // parts(x) -> {t: x with each long base64 run replaced by \u0001, u: those runs as bytes, bl: their byte lengths}; unparts puts them back
+  const b64d=r=>{if(Uint8Array.fromBase64)return Uint8Array.fromBase64(r);const s=atob(r),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u};
+  const b64e=u=>{if(u.toBase64)return u.toBase64();let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
+  const parts=x=>{const us=[],bl=[];let t=x;
+    if(x.indexOf('\u0001')<0){/*RUNS060 loop, no regex*/const ok=c=>(c>=65&&c<=90)||(c>=97&&c<=122)||(c>=48&&c<=57)||c===43||c===47;const out=[];let i=0,last=0;const n=x.length;while(i<n){if(!ok(x.charCodeAt(i))){i++;continue}let j=i;while(j<n&&ok(x.charCodeAt(j)))j++;if(j-i>=1000){let k=j;while(k<n&&k-j<2&&x.charCodeAt(k)===61)k++;const r=x.slice(i,k);let rep=null;if(r.length%4===0){let u=null;try{u=b64d(r)}catch(_){u=null}if(u&&b64e(u)===r){us.push(u);bl.push(u.length);rep='\u0001'}}if(rep!==null){out.push(x.slice(last,i),rep);last=k}i=k}else i=j}out.push(x.slice(last));t=out.join('')}
+    const u=new Uint8Array(bl.reduce((a,n)=>a+n,0));let o=0;for(const v of us){u.set(v,o);o+=v.length}return {t,u,bl}};
+  const unparts=(t,u,bl)=>{if(!bl.length)return t;const sp=t.split('\u0001');if(sp.length!==bl.length+1)throw new Error('The download was incomplete. Reload to try again.');
+    let o=0,r=sp[0];for(let i=0;i<bl.length;i++){r+=b64e(u.subarray(o,o+bl[i]))+sp[i+1];o+=bl[i]}if(o!==u.length)throw new Error('The download was incomplete. Reload to try again.');return r};
+  return {split,join,hash,PH,songs,build,parts,unparts}})();
 </script>
 <script id="sdnet">
 /* Stardust Drifters crew website: Firebase sign-in, crew list check, saves and leaderboards.
@@ -181,25 +192,56 @@ if(cfg&&!window.SDNET){
     // the game itself lives in Firestore (only the crew can read it) in pieces well under the 1 MiB document limit
     const PIECE=300000;
     N.gameInfo=async()=>{const s=await F.getDoc(F.doc(db,'game','meta'));return s.exists()?s.data():null};
-    N.fetchGame=async(m,prog)=>{m=m||await N.gameInfo();if(!m)return null;const pre=m.p||'c';let done=0;
+    // bytes mode (meta.g): each piece set = text pieces {d} (PIECE characters) then byte pieces {b} (BYTES bytes); x={nt,n,bl}
+    const BYTES=900000;
+    const getSet=async(p,x,tick)=>{const S=window.SDMUS,ds=await Promise.all(Array.from({length:x.n},(_,i)=>F.getDoc(F.doc(db,'game',p+i)).then(d=>{if(tick)tick();return d})));
+      const t=ds.slice(0,x.nt).map(d=>d.exists()?d.data().d:'').join(''),bs=ds.slice(x.nt).map(d=>d.exists()&&d.data().b?d.data().b.toUint8Array():new Uint8Array(0));
+      const u=new Uint8Array(bs.reduce((a,v)=>a+v.length,0));let o=0;for(const v of bs){u.set(v,o);o+=v.length}return S.unparts(t,u,x.bl)};
+    N.fetchGame=async(m,prog)=>{m=m||await N.gameInfo();if(!m)return null;const pre=m.p||'c',S=window.SDMUS;let done=0;
+      if(m.g){const all=m.g.n+(m.sl||[]).reduce((a,x)=>a+x.n,0),tick=()=>{done++;if(prog)prog(Math.min(1,done/all))};
+        let txt=await getSet(pre,m.g,tick);if(txt.length!==m.gs)throw new Error('The game download was incomplete. Reload to try again.');
+        if(m.sl){const l=await Promise.all(m.sl.map(async x=>{let v=S.getSong?await S.getSong(x.h).catch(()=>null):null;
+            if(v)done+=x.n;else{v=await getSet('z'+x.h+'_',x,tick);if(v.length!==x.s)throw new Error('The music download was incomplete. Reload to try again.')}
+            return [x.k,v]}));
+          txt=S.join(txt,S.build(l))}
+        if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt}
+      // games uploaded by the older sign-in page (text pieces)
       const parts=await Promise.all(Array.from({length:m.n},(_,i)=>F.getDoc(F.doc(db,'game',pre+i)).then(d=>{done++;if(prog)prog(done/m.n*(m.mh?0.7:1));return d})));
       let txt=parts.map(p=>p.exists()?p.data().d:'').join('');
       if(m.mh){if(txt.length!==m.gs)throw new Error('The game download was incomplete. Reload to try again.');
-        let mus=window.SDMUS.get?await window.SDMUS.get(m.mh).catch(()=>null):null;
+        let mus=S.get?await S.get(m.mh).catch(()=>null):null;
         if(!mus){const mp=await Promise.all(Array.from({length:m.mn},(_,i)=>F.getDoc(F.doc(db,'game',m.mp+i))));mus=mp.map(p=>p.exists()?p.data().d:'').join('');
           if(mus.length!==m.ms)throw new Error('The music download was incomplete. Reload to try again.')}
-        txt=window.SDMUS.join(txt,mus)}
+        txt=S.join(txt,mus)}
       if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt};
     // big games go up in several smaller saves (Firebase takes about 10 MB per save), into the piece set the live version is NOT using,
-    // and the version info is written last, so the crew never download a half-uploaded game
-    // the planet music goes in its own pieces (x0.. or y0..) and is only sent again when it changed
-    N.uploadGame=async(full,prog)=>{const old=await N.gameInfo().catch(()=>null),pre=old&&old.p==='a'?'b':'a',PER=15,sp=window.SDMUS&&window.SDMUS.split(full);
-      const put=async(x,p,f0,f1)=>{const n=Math.ceil(x.length/PIECE);for(let s=0;s<n;s+=PER){const b=F.writeBatch(db);for(let i=s;i<Math.min(n,s+PER);i++)b.set(F.doc(db,'game',p+i),{d:x.slice(i*PIECE,(i+1)*PIECE)});await b.commit();if(prog)prog(f0+(f1-f0)*Math.min(n,s+PER)/n)}return n};
-      const txt=sp?sp.g:full,vm=/<meta name="sd-version" content="([^"]{1,20})"/.exec(full),m={v:Date.now(),p:pre,size:full.length,ver:vm?vm[1]:''};
-      if(sp){m.mh=window.SDMUS.hash(sp.m);m.ms=sp.m.length;m.gs=txt.length;
-        if(old&&old.mh===m.mh&&old.mp&&old.mn){m.mp=old.mp;m.mn=old.mn;m.mkept=true}
-        else{m.mp=old&&old.mp==='x'?'y':'x';m.mn=await put(sp.m,m.mp,0,0.35)}}
-      m.n=await put(txt,pre,sp&&!m.mkept?0.35:0,1);delete m.mkept;await F.setDoc(F.doc(db,'game','meta'),m);return m};
+    // and the version info is written last, so the crew never download a half-uploaded game.
+    // Each song / sound table (each music tag entry) has its own pieces (z<hash>_0..) and is only sent again when it changed.
+    N.uploadGame=async(full,prog)=>{const old=await N.gameInfo().catch(()=>null),pre=old&&old.p==='a'?'b':'a',S=window.SDMUS,sp=S&&S.split(full);
+      const putSet=async(P,p,f0,f1)=>{const docs=[];for(let i=0;i<P.t.length;i+=PIECE)docs.push({d:P.t.slice(i,i+PIECE)});const nt=docs.length;
+        for(let i=0;i<P.u.length;i+=BYTES)docs.push({b:F.Bytes.fromUint8Array(P.u.slice(i,i+BYTES))});
+        let i=0;while(i<docs.length){const b=F.writeBatch(db);let sz=0;while(i<docs.length&&(sz===0||sz+BYTES<=8000000)){const d=docs[i];sz+=d.b?BYTES:PIECE*3;b.set(F.doc(db,'game',p+i),d);i++}
+          await b.commit();if(prog)prog(f0+(f1-f0)*i/docs.length)}
+        return {nt,n:docs.length,bl:P.bl}};
+      const l=sp?S.songs(sp.m):null;if(l)full=S.join(sp.g,S.build(l));
+      const txt=sp?sp.g:full,vm=/<meta name="sd-version" content="([^"]{1,20})"/.exec(full),m={v:Date.now(),p:pre,size:full.length,ver:vm?vm[1]:'',gs:txt.length};
+      const G=S.parts(txt);
+      if(l){m.sl=l.map(([k,v])=>({k,h:S.hash(v),s:v.length}));
+        const prev=new Map((old&&old.g&&old.sl||[]).map(x=>[x.h,x])),todo=[];
+        m.sl.forEach((x,i)=>{const o=prev.get(x.h);if(o){x.nt=o.nt;x.n=o.n;x.bl=o.bl}else{prev.set(x.h,x);todo.push([x,S.parts(l[i][1])])}});
+        const tot=todo.reduce((a,[,P])=>a+P.u.length+P.t.length,0)+G.u.length+G.t.length;let up=0;
+        for(const [x,P] of todo){const w=P.u.length+P.t.length,r=await putSet(P,'z'+x.h+'_',up/tot,(up+w)/tot);x.nt=r.nt;x.n=r.n;x.bl=r.bl;up+=w}
+        m.g=await putSet(G,pre,up/tot,1)}
+      else m.g=await putSet(G,pre,0,1);
+      // what the version before this one used is kept for one more upload (a crew member may still be downloading it), then deleted
+      if(old){m.psl=old.g&&old.sl||[];if(old.mp&&old.mn){m.pmp=old.mp;m.pmn=old.mn}m.pn=old.g?old.g.n:old.n||0}
+      await F.setDoc(F.doc(db,'game','meta'),m);
+      if(old)try{const keep=new Set([...(m.sl||[]),...(m.psl||[])].map(x=>x.h)),del=[];
+        for(const x of old.psl||[])if(!keep.has(x.h))for(let i=0;i<x.n;i++)del.push('z'+x.h+'_'+i);
+        if(old.pmp&&old.pmn)for(let i=0;i<old.pmn;i++)del.push(old.pmp+i);
+        for(let i=m.g.n;i<(old.pn||0);i++)del.push(pre+i); // pieces past the end of this set, left by the version before last
+        for(let s=0;s<del.length;s+=400){const b=F.writeBatch(db);for(const d of del.slice(s,s+400))b.delete(F.doc(db,'game',d));await b.commit()}}catch(_){}
+      return m};
     async function evaluate(u){
       if(!u){N.user=null;N.isAdmin=false;N.state='signedout';emit();return}
       N.user={uid:u.uid,email:lc(u.email),defaultName:String(u.displayName||'').split(' ')[0]};
@@ -234,20 +276,32 @@ const flag=v=>{try{v?localStorage.setItem(SK,'1'):localStorage.removeItem(SK)}ca
 const idb=()=>new Promise((ok,no)=>{try{const r=indexedDB.open('sd_game',1);r.onupgradeneeded=()=>r.result.createObjectStore('g');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}catch(e){no(e)}});
 const idbGet=async k=>{const d=await idb();try{return await new Promise((ok,no)=>{const q=d.transaction('g').objectStore('g').get(k);q.onsuccess=()=>ok(q.result||null);q.onerror=()=>no(q.error)})}finally{d.close()}};
 SDMUS.get=async h=>{const x=await idbGet('music');return x&&x.h===h&&x.txt?x.txt:null};
-async function cached(){try{const c=await idbGet('game');if(c&&c.txt&&c.txt.indexOf(SDMUS.PH)>=0){const x=await idbGet('music');return x&&x.txt?{v:c.v,txt:SDMUS.join(c.txt,x.txt)}:null}if(c)return c}catch(_){}
+// one song from this device's copy (also from the whole music block older sign-in pages kept, so the first update reuses those songs)
+let oldSongs=null;
+SDMUS.getSong=async h=>{const v=await idbGet('song:'+h);if(v)return v;
+  if(!oldSongs)oldSongs=(async()=>{const o={};try{const x=await idbGet('music');if(x&&x.txt)for(const [,s] of SDMUS.songs(x.txt))o[SDMUS.hash(s)]=s}catch(_){}return o})();
+  return (await oldSongs)[h]||null};
+async function cached(){try{const c=await idbGet('game');
+    if(c&&c.sl&&c.txt){const l=[];for(const [k,h] of c.sl){const v=await idbGet('song:'+h);if(!v)return null;l.push([k,v])}return {v:c.v,txt:SDMUS.join(c.txt,SDMUS.build(l))}}
+    if(c&&c.txt&&c.txt.indexOf(SDMUS.PH)>=0){const x=await idbGet('music');return x&&x.txt?{v:c.v,txt:SDMUS.join(c.txt,x.txt)}:null}if(c)return c}catch(_){}
   try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}}
-async function remember(v,txt){try{const sp=SDMUS.split(txt),d=await idb();await new Promise((ok,no)=>{const t=d.transaction('g','readwrite'),st=t.objectStore('g');
-      if(sp){st.put({v,txt:sp.g},'game');st.put({h:SDMUS.hash(sp.m),txt:sp.m},'music')}else st.put({v,txt},'game');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
+async function remember(v,txt){try{const sp=SDMUS.split(txt);let l=null;if(sp)try{l=SDMUS.songs(sp.m).map(([k,s])=>[k,SDMUS.hash(s),s])}catch(_){}
+    const d=await idb();await new Promise((ok,no)=>{const t=d.transaction('g','readwrite'),st=t.objectStore('g');
+      if(l){st.put({v,txt:sp.g,sl:l.map(([k,h])=>[k,h])},'game');const want=new Set(l.map(([,h])=>'song:'+h));for(const [,h,s] of l)st.put(s,'song:'+h);st.delete('music');
+        const q=st.getAllKeys();q.onsuccess=()=>{for(const k of q.result)if(typeof k==='string'&&k.startsWith('song:')&&!want.has(k))st.delete(k)}}
+      else if(sp){st.put({v,txt:sp.g},'game');st.put({h:SDMUS.hash(sp.m),txt:sp.m},'music')}else st.put({v,txt},'game');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
     try{localStorage.removeItem(CK)}catch(_){}try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}}
   catch(_){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(__){try{localStorage.removeItem(CK)}catch(___){}}}}
 async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&c.txt.length===meta.size)return c.txt;
-  show('cLoad');$('loadT').textContent='Downloading';$('loadMsg').textContent='Getting the latest version of the game…';$('loadBar').hidden=false;$('loadBar').classList.remove('run');$('loadFill').style.width='30%';
-  const musOk=meta.mh&&await SDMUS.get(meta.mh).catch(()=>null),need=meta.mh&&musOk?meta.gs:meta.size;
-  if(need>1e6)$('loadMsg').textContent='Getting the latest version of the game'+(meta.mh&&!musOk?' and its music':'')+' ('+Math.max(1,Math.round(need/1048576))+' MB, only once per version)…';
+  show('cLoad');$('loadT').textContent='Downloading';$('loadMsg').textContent='Getting the latest version of the game…';$('loadBar').hidden=false;$('loadFill').style.width='30%';
+  let need,musNew;
+  // real download size in bytes mode: the bytes plus the text left around them
+  const real=(x,s)=>{const b=(x.bl||[]).reduce((a,n)=>a+n,0);return b+Math.max(0,s-Math.ceil(b/3)*4)};
+  if(meta.sl&&meta.g){const got=await Promise.all(meta.sl.map(x=>SDMUS.getSong(x.h).then(v=>!!v,()=>false)));musNew=meta.sl.reduce((a,x,i)=>a+(got[i]?0:real(x,x.s)),0);need=real(meta.g,meta.gs)+musNew}
+  else{const musOk=meta.mh&&await SDMUS.get(meta.mh).catch(()=>null);need=meta.mh&&musOk?meta.gs:meta.size;musNew=meta.mh&&!musOk}
+  if(need>1e6)$('loadMsg').textContent='Getting the latest version of the game'+(musNew?(meta.sl?' and its new music':' and its music'):'')+' ('+Math.max(1,Math.round(need/1048576))+' MB, only once per version)…';
   const txt=await SDNET.fetchGame(meta,f=>{$('loadFill').style.width=Math.round(5+95*f)+'%'});$('loadFill').style.width='100%';await remember(meta.v,txt);return txt}
-function launch(txt){if(launched)return;launched=true;show('cLoad');$('loadT').textContent='Starting';$('loadMsg').hidden=true;$('loadBar').hidden=false;$('loadBar').classList.add('run');
-  requestAnimationFrame(()=>setTimeout(()=>swap(txt),30))}
-function swap(txt){
+function launch(txt){if(launched)return;launched=true;
   const head='<script>window.SD_FIREBASE='+JSON.stringify(window.SD_FIREBASE)+';<\/script>\n'+(window.SD_PWA||'')+'<script>'+$('sdmus').textContent+'<\/script>\n';
   const net='<script>'+$('sdnet').textContent+'<\/script>';
   let html=txt.replace(/<head>/i,'<head>\n'+head);
@@ -267,7 +321,7 @@ async function ready(){if(started)return;started=true;flag(1);
   catch(e){started=false;show('cErr');$('errMsg').textContent=nice(e)}}
 function render(){const N=window.SDNET;if(!N||launched)return;
   if(N.state!=='ready')started=false;
-  if(N.state==='loading'){show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Reaching the crew server…';$('loadBar').hidden=false;$('loadBar').classList.add('run')}
+  if(N.state==='loading'){show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Reaching the crew server…';$('loadBar').hidden=true}
   else if(N.state==='signedout'){show('cIn');if(N.msg)msg('mIn',N.msg)}
   else if(N.state==='verify'){show('cVerify');$('verWho').textContent=N.user.email}
   else if(N.state==='denied'){show('cDenied');$('denWho').textContent=N.user.email}
