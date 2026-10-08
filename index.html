@@ -215,6 +215,16 @@ if(cfg&&!window.SDNET){
           if(mus.length!==m.ms)throw new Error('The music download was incomplete. Reload to try again.')}
         txt=S.join(txt,mus)}
       if(txt.length!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return txt};
+    // STREAM060 phones: game part and each song downloaded and saved one at a time, never one big text
+    N.fetchGameTo=async(m,prog,save)=>{const S=window.SDMUS,pre=m.p||'c';let done=0;const all=m.g.n+m.sl.reduce((a,x)=>a+x.n,0),tick=()=>{done++;if(prog)prog(Math.min(1,done/all))};
+      const g=await getSet(pre,m.g,tick);if(g.length!==m.gs||g.indexOf(S.PH)<0)throw new Error('The game download was incomplete. Reload to try again.');
+      const q=m.sl.slice();let tot=g.length-S.PH.length;const list=m.sl.map(x=>[x.k,x.h]),vs={};
+      const work=async()=>{for(;;){const x=q.shift();if(!x)return;let v=S.getSong?await S.getSong(x.h).catch(()=>null):null;
+          if(v)done+=x.n;else{v=await getSet('z'+x.h+'_',x,tick);if(v.length!==x.s)throw new Error('The music download was incomplete. Reload to try again.')}
+          vs[x.h]=v.length;await save(x.h,v);v=null;if(prog)prog(Math.min(1,done/all))}};
+      await Promise.all([work(),work(),work()]);
+      const ll=list.map(([k,h])=>[k,{length:vs[h]}]);tot+=S.blen(ll.map(([k,o])=>[k,{length:o.length}]));
+      if(tot!==m.size)throw new Error('The game download was incomplete. Reload to try again.');return {g,list}};
     // big games go up in several smaller saves (Firebase takes about 10 MB per save), into the piece set the live version is NOT using,
     // and the version info is written last, so the crew never download a half-uploaded game.
     // Each song / sound table (each music tag entry) has its own pieces (z<hash>_0..) and is only sent again when it changed.
@@ -293,6 +303,12 @@ async function remember(v,txt){try{const sp=SDMUS.split(txt);let l=null;if(sp)tr
       else if(sp){st.put({v,txt:sp.g},'game');st.put({h:SDMUS.hash(sp.m),txt:sp.m},'music')}else st.put({v,txt},'game');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
     try{localStorage.removeItem(CK)}catch(_){}try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}}
   catch(_){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(__){try{localStorage.removeItem(CK)}catch(___){}}}}
+const idbPut=async(k,v)=>{const d=await idb();try{await new Promise((ok,no)=>{const t=d.transaction('g','readwrite');t.objectStore('g').put(v,k);t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)})}finally{d.close()}};
+async function saveStream(meta,prog){/*STREAM060*/const r=await SDNET.fetchGameTo(meta,prog,(h,v)=>idbPut('song:'+h,v));
+  const d=await idb();await new Promise((ok,no)=>{const t=d.transaction('g','readwrite'),st=t.objectStore('g');st.put({v:meta.v,txt:r.g,sl:r.list},'game');st.delete('music');
+    const want=new Set(r.list.map(([,h])=>'song:'+h)),q=st.getAllKeys();q.onsuccess=()=>{for(const k of q.result)if(typeof k==='string'&&k.startsWith('song:')&&!want.has(k))st.delete(k)};
+    t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
+  try{localStorage.removeItem(CK)}catch(_){}try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}}
 async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&(c.g?c.len:c.txt.length)===meta.size)return c.g?c:c.txt;
   show('cLoad');$('loadT').textContent='Downloading';$('loadMsg').textContent='Getting the latest version of the game…';$('loadBar').hidden=false;$('loadFill').style.width='30%';
   let need,musNew;
@@ -301,6 +317,9 @@ async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&(
   if(meta.sl&&meta.g){const got=await Promise.all(meta.sl.map(x=>SDMUS.getSong(x.h).then(v=>!!v,()=>false)));musNew=meta.sl.reduce((a,x,i)=>a+(got[i]?0:real(x,x.s)),0);need=real(meta.g,meta.gs)+musNew}
   else{const musOk=meta.mh&&await SDMUS.get(meta.mh).catch(()=>null);need=meta.mh&&musOk?meta.gs:meta.size;musNew=meta.mh&&!musOk}
   if(need>1e6)$('loadMsg').textContent='Getting the latest version of the game'+(musNew?(meta.sl?' and its new music':' and its music'):'')+' ('+Math.max(1,Math.round(need/1048576))+' MB, only once per version)…';
+  if(meta.g&&meta.sl&&SDNET.fetchGameTo){await saveStream(meta,f=>{$('loadFill').style.width=Math.round(5+95*f)+'%'});$('loadFill').style.width='100%';
+    const c3=await cached();if(!c3||!c3.g||c3.v!==meta.v||c3.len!==meta.size)throw new Error('Could not keep the game on this device. Reload to try again.');
+    let rl=false;try{rl=sessionStorage.getItem('sd_rl')==='1';if(!rl)sessionStorage.setItem('sd_rl','1')}catch(_){rl=true}if(!rl){location.reload();return new Promise(()=>{})}return c3}
   let txt=await SDNET.fetchGame(meta,f=>{$('loadFill').style.width=Math.round(5+95*f)+'%'});$('loadFill').style.width='100%';await remember(meta.v,txt);
   {const c2=await cached();if(c2&&c2.g&&c2.v===meta.v&&c2.len===txt.length){txt=null;/*MEM060b start fresh from the saved copy*/let rl=false;try{rl=sessionStorage.getItem('sd_rl')==='1';if(!rl)sessionStorage.setItem('sd_rl','1')}catch(_){rl=true}if(!rl){location.reload();return new Promise(()=>{})}return c2}}return txt}
 function launch(x){if(launched)return;launched=true;/*MEM060 written in pieces, no full copy*/
