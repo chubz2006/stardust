@@ -134,6 +134,7 @@ main{width:100%;max-width:none;min-height:100vh;min-height:100dvh;gap:0;justify-
 window.SDMUS=window.SDMUS||(()=>{const TAG='<script>window.__MUS=',PH='<script>window.__MUS=null/*SDMUS*/<\/script>',END='<\/script>';
   const split=txt=>{const i=txt.indexOf(TAG);if(i<0||txt.indexOf(TAG,i+1)>=0||txt.indexOf(PH)>=0)return null;const e=txt.indexOf(END,i);if(e<0)return null;
     return {g:txt.slice(0,i)+PH+txt.slice(e+END.length),m:txt.slice(i,e+END.length)}};
+  const blen=l=>TAG.length+1+l.reduce((a,[k,v])=>a+JSON.stringify(k).length+1+v.length,0)+Math.max(0,l.length-1)+2+END.length;
   const join=(g,m)=>{const i=g.indexOf(PH);return i<0?g:g.slice(0,i)+m+g.slice(i+PH.length)};
   const hash=x=>{let h=0x811c9dc5,k=0x9e3779b1;for(let i=0;i<x.length;i++){const c=x.charCodeAt(i);h=Math.imul(h^c,0x01000193);k=Math.imul(k^c,0x85ebca6b)}return (h>>>0).toString(36)+(k>>>0).toString(36)+'-'+x.length};
   // songs(m) -> [[key, its JSON text]...] in order; build(list) -> music tag (the page uploads the rebuilt form, so sizes always match)
@@ -147,7 +148,7 @@ window.SDMUS=window.SDMUS||(()=>{const TAG='<script>window.__MUS=',PH='<script>w
     const u=new Uint8Array(bl.reduce((a,n)=>a+n,0));let o=0;for(const v of us){u.set(v,o);o+=v.length}return {t,u,bl}};
   const unparts=(t,u,bl)=>{if(!bl.length)return t;const sp=t.split('\u0001');if(sp.length!==bl.length+1)throw new Error('The download was incomplete. Reload to try again.');
     let o=0,r=sp[0];for(let i=0;i<bl.length;i++){r+=b64e(u.subarray(o,o+bl[i]))+sp[i+1];o+=bl[i]}if(o!==u.length)throw new Error('The download was incomplete. Reload to try again.');return r};
-  return {split,join,hash,PH,songs,build,parts,unparts}})();
+  return {split,join,hash,PH,songs,build,parts,unparts,blen,TAG,END}})();
 </script>
 <script id="sdnet">
 /* Stardust Drifters crew website: Firebase sign-in, crew list check, saves and leaderboards.
@@ -282,7 +283,7 @@ SDMUS.getSong=async h=>{const v=await idbGet('song:'+h);if(v)return v;
   if(!oldSongs)oldSongs=(async()=>{const o={};try{const x=await idbGet('music');if(x&&x.txt)for(const [,s] of SDMUS.songs(x.txt))o[SDMUS.hash(s)]=s}catch(_){}return o})();
   return (await oldSongs)[h]||null};
 async function cached(){try{const c=await idbGet('game');
-    if(c&&c.sl&&c.txt){const l=[];for(const [k,h] of c.sl){const v=await idbGet('song:'+h);if(!v)return null;l.push([k,v])}return {v:c.v,txt:SDMUS.join(c.txt,SDMUS.build(l))}}
+    if(c&&c.sl&&c.txt){/*MEM060 pieces*/const l=[];for(const [k,h] of c.sl){const v=await idbGet('song:'+h);if(!v)return null;l.push([k,v])}if(c.txt.indexOf(SDMUS.PH)<0)return null;return {v:c.v,g:c.txt,l,txt:true,len:c.txt.length-SDMUS.PH.length+SDMUS.blen(l)}}
     if(c&&c.txt&&c.txt.indexOf(SDMUS.PH)>=0){const x=await idbGet('music');return x&&x.txt?{v:c.v,txt:SDMUS.join(c.txt,x.txt)}:null}if(c)return c}catch(_){}
   try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}}
 async function remember(v,txt){try{const sp=SDMUS.split(txt);let l=null;if(sp)try{l=SDMUS.songs(sp.m).map(([k,s])=>[k,SDMUS.hash(s),s])}catch(_){}
@@ -292,7 +293,7 @@ async function remember(v,txt){try{const sp=SDMUS.split(txt);let l=null;if(sp)tr
       else if(sp){st.put({v,txt:sp.g},'game');st.put({h:SDMUS.hash(sp.m),txt:sp.m},'music')}else st.put({v,txt},'game');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)});d.close();
     try{localStorage.removeItem(CK)}catch(_){}try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}}
   catch(_){try{localStorage.setItem(CK,JSON.stringify({v,txt}))}catch(__){try{localStorage.removeItem(CK)}catch(___){}}}}
-async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&c.txt.length===meta.size)return c.txt;
+async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&(c.g?c.len:c.txt.length)===meta.size)return c.g?c:c.txt;
   show('cLoad');$('loadT').textContent='Downloading';$('loadMsg').textContent='Getting the latest version of the game…';$('loadBar').hidden=false;$('loadFill').style.width='30%';
   let need,musNew;
   // real download size in bytes mode: the bytes plus the text left around them
@@ -300,17 +301,23 @@ async function getGame(meta){const c=await cached();if(c&&c.v===meta.v&&c.txt&&c
   if(meta.sl&&meta.g){const got=await Promise.all(meta.sl.map(x=>SDMUS.getSong(x.h).then(v=>!!v,()=>false)));musNew=meta.sl.reduce((a,x,i)=>a+(got[i]?0:real(x,x.s)),0);need=real(meta.g,meta.gs)+musNew}
   else{const musOk=meta.mh&&await SDMUS.get(meta.mh).catch(()=>null);need=meta.mh&&musOk?meta.gs:meta.size;musNew=meta.mh&&!musOk}
   if(need>1e6)$('loadMsg').textContent='Getting the latest version of the game'+(musNew?(meta.sl?' and its new music':' and its music'):'')+' ('+Math.max(1,Math.round(need/1048576))+' MB, only once per version)…';
-  const txt=await SDNET.fetchGame(meta,f=>{$('loadFill').style.width=Math.round(5+95*f)+'%'});$('loadFill').style.width='100%';await remember(meta.v,txt);return txt}
-function launch(txt){if(launched)return;launched=true;
+  let txt=await SDNET.fetchGame(meta,f=>{$('loadFill').style.width=Math.round(5+95*f)+'%'});$('loadFill').style.width='100%';await remember(meta.v,txt);
+  {const c2=await cached();if(c2&&c2.g&&c2.v===meta.v&&c2.len===txt.length){txt=null;/*MEM060b start fresh from the saved copy*/let rl=false;try{rl=sessionStorage.getItem('sd_rl')==='1';if(!rl)sessionStorage.setItem('sd_rl','1')}catch(_){rl=true}if(!rl){location.reload();return new Promise(()=>{})}return c2}}return txt}
+function launch(x){if(launched)return;launched=true;/*MEM060 written in pieces, no full copy*/
   const head='<script>window.SD_FIREBASE='+JSON.stringify(window.SD_FIREBASE)+';<\/script>\n'+(window.SD_PWA||'')+'<script>'+$('sdmus').textContent+'<\/script>\n';
   const net='<script>'+$('sdnet').textContent+'<\/script>';
-  let html=txt.replace(/<head>/i,'<head>\n'+head);
-  html=html.lastIndexOf('</body>')>0?html.slice(0,html.lastIndexOf('</body>'))+net+'\n'+html.slice(html.lastIndexOf('</body>')):html+net;
-  document.open();document.write(html);document.close()}
+  const g=typeof x==='string'?x:x.g,l=typeof x==='string'?null:x.l;
+  const hm=/<head>/i.exec(g),hi=hm?hm.index+hm[0].length:-1,bi=g.lastIndexOf('</body>'),pi=l?g.indexOf(SDMUS.PH):-1;
+  const cuts=[];if(hi>=0)cuts.push([hi,hi,'\n'+head]);if(pi>=0)cuts.push([pi,pi+SDMUS.PH.length,null]);if(bi>=0)cuts.push([bi,bi,net+'\n']);cuts.sort((a,b)=>a[0]-b[0]);
+  document.open();let o=0;
+  for(const [s,e,ins] of cuts){document.write(g.slice(o,s));
+    if(ins!==null)document.write(ins);else{document.write(SDMUS.TAG+'{');for(let i=0;i<l.length;i++)document.write((i?',':'')+JSON.stringify(l[i][0])+':'+l[i][1]);document.write('};'+SDMUS.END)}
+    o=e}
+  document.write(g.slice(o));if(bi<0)document.write(net);document.close()}
 // after the game has started from this device's copy: once signed in, fetch a newer version for next time and tell the game
 function bgCheck(c){let n=0;const iv=setInterval(async()=>{const N=window.SDNET;if(++n>240){clearInterval(iv);return}
   if(!N||N.state!=='ready')return;clearInterval(iv);
-  try{const meta=await N.gameInfo();if(!meta||meta.v===c.v)return;const txt=await N.fetchGame(meta);await remember(meta.v,txt);
+  try{const meta=await N.gameInfo();if(!meta||meta.v===c.v)return;/*MEM060 big update waits for the next open*/if((meta.size||0)>15e6){try{localStorage.setItem('sd_upd','1')}catch(_){}dispatchEvent(new CustomEvent('sdupdate',{detail:{ver:meta.ver||''}}));return}const txt=await N.fetchGame(meta);await remember(meta.v,txt);
     dispatchEvent(new CustomEvent('sdupdate',{detail:{ver:meta.ver||''}}))}catch(_){}},500)}
 async function ready(){if(started)return;started=true;flag(1);
   try{show('cLoad');$('loadT').textContent='Connecting';$('loadMsg').textContent='Checking the game version…';
@@ -330,8 +337,9 @@ function render(){const N=window.SDNET;if(!N||launched)return;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 // returning players start instantly from the copy saved on this device; the game's own sign-in screen takes over from there
 (async()=>{let signed=false;try{signed=localStorage.getItem(SK)==='1'}catch(_){}
-  const c=signed?await cached():null;
-  if(c&&c.txt&&signed){launch(c.txt);bgCheck(c);return}
+  let upd=false;try{upd=localStorage.getItem('sd_upd')==='1';localStorage.removeItem('sd_upd')}catch(_){}
+  const c=signed&&!upd?await cached():null;
+  if(c&&c.txt&&signed){try{sessionStorage.removeItem('sd_rl')}catch(_){}launch(c.g?c:c.txt);bgCheck(c);return}
   addEventListener('sdnet',render);render()})();
 // email fields stay tucked away until Email sign in or Create account is tapped
 const openEmail=mode=>{const was=$('emailBox').hidden;$('emailBox').hidden=false;$('twoE').hidden=true;$('iPass').autocomplete=mode==='up'?'new-password':'current-password';
